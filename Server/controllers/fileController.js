@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// Carica un file
 const uploadFile = (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'Nessun file caricato.' });
@@ -13,10 +12,9 @@ const uploadFile = (req, res) => {
     });
 };
 
-// Ottieni l'elenco dei file (paginato)
 const getFiles = (req, res) => {
-    const page = parseInt(req.query.page) || 1; // Pagina corrente
-    const limit = parseInt(req.query.limit) || 10; // Numero di file per pagina
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 10; 
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
 
@@ -26,7 +24,7 @@ const getFiles = (req, res) => {
             return res.status(500).json({ message: 'Errore durante la lettura dei file.' });
         }
 
-        const paginatedFiles = files.slice(startIndex, endIndex);
+        const paginatedFiles = files.slice(startIndex, endIndex).map(filename => `${req.protocol}://${req.get('host')}/api/file/image/${filename}`);
         res.status(200).json({
             files: paginatedFiles,
             currentPage: page,
@@ -35,4 +33,14 @@ const getFiles = (req, res) => {
     });
 };
 
-module.exports = { uploadFile, getFiles };
+const getFile = (req, res) => {
+    const filename = req.params.filename;
+    const filePath = path.join(__dirname, '../uploads', filename);
+    res.sendFile(filePath, err => {
+        if (err) {
+            return res.status(404).json({ message: 'File non trovato.' });
+        }
+    });
+};
+
+module.exports = { uploadFile, getFiles, getFile };

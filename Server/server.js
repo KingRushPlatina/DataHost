@@ -13,7 +13,7 @@ app.use(express.json());
 connectDB();
 
 app.use('/api/auth', authRoutes);
-app.use('/api/files', fileroutes);
+app.use('/api/file', fileroutes);
 
 
 app.listen(PORT, () => {
