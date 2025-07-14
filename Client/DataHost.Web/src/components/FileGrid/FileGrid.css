@@ -1,0 +1,157 @@
+.file-grid-container {
+  padding: 20px;
+}
+
+.grid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.grid-header h2 {
+  font-size: 20px;
+  font-weight: 400;
+  color: #202124;
+}
+
+.view-options {
+  display: flex;
+  gap: 8px;
+}
+
+.view-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: #5f6368;
+}
+
+.view-button:hover {
+  background-color: #f1f3f4;
+}
+
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.file-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.file-card:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border-color: #dadce0;
+}
+
+.file-card.selected {
+  border-color: #4285f4;
+  box-shadow: 0 0 0 2px #4285f4;
+}
+
+.file-preview {
+  height: 160px;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.file-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.file-info {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-icon {
+  color: #5f6368;
+  flex-shrink: 0;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 13px;
+  color: #202124;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.more-button {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%;
+  color: #5f6368;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.file-card:hover .more-button {
+  opacity: 1;
+}
+
+.more-button:hover {
+  background-color: #f1f3f4;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  color: #5f6368;
+  font-size: 16px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.pagination-button {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #3c4043;
+  transition: background-color 0.2s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #f8f9fa;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #5f6368;
+}

@@ -1,0 +1,259 @@
+/* Header Styles */
+.header {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  padding: 0 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  flex: 0 0 238px;
+}
+
+.menu-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+}
+
+.menu-button:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.menu-icon {
+  width: 24px;
+  height: 24px;
+  fill: #5f6368;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.drive-logo {
+  width: 40px;
+  height: 40px;
+}
+
+.drive-text {
+  font-size: 22px;
+  color: #5f6368;
+  margin-left: 8px;
+  font-weight: 400;
+}
+
+.header-center {
+  flex: 1;
+  max-width: 720px;
+  margin: 0 40px;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  background-color: #f1f3f4;
+  border-radius: 8px;
+  padding: 0 16px;
+  height: 48px;
+  transition: box-shadow 0.2s, background-color 0.2s;
+}
+
+.search-container:focus-within {
+  background-color: #fff;
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+}
+
+.search-icon {
+  color: #5f6368;
+  margin-right: 12px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 16px;
+  color: #202124;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+  border-radius: 50%;
+  color: #5f6368;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.user-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #4285f4;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-left: 8px;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 64px;
+  bottom: 0;
+  width: 256px;
+  background-color: #fff;
+  transition: transform 0.2s;
+  z-index: 99;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.sidebar.closed {
+  transform: translateX(-240px);
+}
+
+.new-button {
+  margin: 8px 16px 16px;
+  padding: 0 24px 0 0;
+  height: 56px;
+  background-color: #fff;
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3c4043;
+  transition: box-shadow 0.2s;
+}
+
+.new-button:hover {
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+}
+
+.new-button svg {
+  margin-left: 16px;
+}
+
+.nav-menu {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 16px;
+  height: 40px;
+  text-decoration: none;
+  color: #202124;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0 20px 20px 0;
+  margin-right: 16px;
+  transition: background-color 0.2s;
+}
+
+.nav-item:hover {
+  background-color: #f1f3f4;
+}
+
+.nav-item.active {
+  background-color: #e8f0fe;
+  color: #185abc;
+}
+
+.nav-item svg {
+  margin-left: 12px;
+}
+
+.storage-info {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 12px;
+}
+
+.storage-details {
+  flex: 1;
+}
+
+.storage-details span {
+  font-size: 13px;
+  color: #202124;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.storage-bar {
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  margin-bottom: 4px;
+  overflow: hidden;
+}
+
+.storage-used {
+  height: 100%;
+  background-color: #4285f4;
+  transition: width 0.3s;
+}
+
+.storage-details small {
+  font-size: 11px;
+  color: #5f6368;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 256px;
+  margin-top: 64px;
+  padding: 20px;
+  transition: margin-left 0.2s;
+  min-height: calc(100vh - 64px);
+}
+
+.main-content.sidebar-closed {
+  margin-left: 16px;
+}
