@@ -38,13 +38,13 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Limite di dimensione: 1GB per file grandi
+// Limite di dimensione: 5GB per file grandi
 const upload = multer({ 
     storage, 
     fileFilter,
     limits: {
-        fileSize: 1024 * 1024 * 1024, // 1GB
-        fieldSize: 1024 * 1024 * 1024, // 1GB per i campi
+        fileSize: 5 * 1024 * 1024 * 1024, // 5GB
+        fieldSize: 5 * 1024 * 1024 * 1024, // 5GB per i campi
     }
 });
 
