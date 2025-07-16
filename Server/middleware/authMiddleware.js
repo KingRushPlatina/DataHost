@@ -2,7 +2,12 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const authMiddleware = (req, res, next) => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    // Prova prima l'header Authorization, poi il query parameter
+    let token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+        token = req.query.token;
+    }
 
     if (!token) {
         return res.status(401).json({ message: 'Accesso negato. Token mancante.' });

@@ -4,6 +4,9 @@ const API_BASE_URL = 'http://localhost:4300/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 300000, // 5 minuti di timeout globale
+  maxContentLength: 1024 * 1024 * 1024, // 1GB
+  maxBodyLength: 1024 * 1024 * 1024, // 1GB
 })
 
 api.interceptors.request.use(

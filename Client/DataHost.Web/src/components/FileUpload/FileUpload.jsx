@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Upload, X, FileImage, File } from 'lucide-react'
+import { Upload, X, FileImage, File, Video } from 'lucide-react'
 import api from '../../services/api'
 import './FileUpload.css'
 
@@ -41,6 +41,7 @@ const FileUpload = ({ onClose, onUploadSuccess }) => {
           headers: {
             'Content-Type': 'multipart/form-data'
           },
+          timeout: 300000, // 5 minuti di timeout
           onUploadProgress: (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
             setUploadProgress(prev => ({
@@ -55,7 +56,11 @@ const FileUpload = ({ onClose, onUploadSuccess }) => {
       onClose()
     } catch (error) {
       console.error('Errore upload:', error)
-      alert('Errore durante il caricamento dei file')
+      if (error.code === 'ECONNABORTED') {
+        alert('Timeout durante il caricamento. Il file potrebbe essere troppo grande.')
+      } else {
+        alert('Errore durante il caricamento dei file: ' + (error.response?.data?.message || error.message))
+      }
     } finally {
       setUploading(false)
     }
@@ -64,6 +69,8 @@ const FileUpload = ({ onClose, onUploadSuccess }) => {
   const getFileIcon = (file) => {
     if (file.type.startsWith('image/')) {
       return <FileImage size={20} />
+    } else if (file.type.startsWith('video/')) {
+      return <Video size={20} />
     }
     return <File size={20} />
   }
@@ -93,6 +100,7 @@ const FileUpload = ({ onClose, onUploadSuccess }) => {
             type="file"
             multiple
             onChange={handleFileSelect}
+            accept="image/*,video/*"
             style={{ display: 'none' }}
           />
         </div>
@@ -105,14 +113,20 @@ const FileUpload = ({ onClose, onUploadSuccess }) => {
                 {getFileIcon(file)}
                 <span className="file-name">{file.name}</span>
                 <span className="file-size">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                  {file.size >= 1024 * 1024 * 1024 
+                    ? (file.size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+                    : (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                  }
                 </span>
                 {uploadProgress[index] !== undefined && (
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: `${uploadProgress[index]}%` }}
-                    />
+                  <div className="progress-container">
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill" 
+                        style={{ width: `${uploadProgress[index]}%` }}
+                      />
+                    </div>
+                    <span className="progress-text">{uploadProgress[index]}%</span>
                   </div>
                 )}
                 {!uploading && (
