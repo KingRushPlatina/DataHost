@@ -1,9 +1,29 @@
 import React, { useState, useRef } from 'react'
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  Button, 
+  Box, 
+  Typography, 
+  List, 
+  ListItem, 
+  ListItemIcon, 
+  ListItemText, 
+  ListItemSecondaryAction, 
+  IconButton, 
+  LinearProgress,
+  Paper,
+  useTheme,
+  useMediaQuery
+} from '@mui/material'
 import { Upload, X, FileImage, File, Video } from 'lucide-react'
 import api from '../../services/api'
-import './FileUpload.css'
 
 const FileUpload = ({ onClose, onUploadSuccess }) => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const [files, setFiles] = useState([])
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState({})
@@ -76,25 +96,48 @@ const FileUpload = ({ onClose, onUploadSuccess }) => {
   }
 
   return (
-    <div className="upload-modal-overlay" onClick={onClose}>
-      <div className="upload-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="upload-header">
-          <h2>Carica file</h2>
-          <button className="close-button" onClick={onClose}>
-            <X size={24} />
-          </button>
-        </div>
+    <Dialog 
+      open={true} 
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMobile}
+    >
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant="h6">Carica file</Typography>
+        <IconButton onClick={onClose}>
+          <X size={24} />
+        </IconButton>
+      </DialogTitle>
 
-        <div 
-          className="upload-area"
+      <DialogContent>
+        <Paper
+          sx={{
+            p: 4,
+            border: '2px dashed #e0e0e0',
+            borderRadius: 2,
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            '&:hover': {
+              borderColor: '#4285f4',
+              backgroundColor: '#f8f9ff'
+            }
+          }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onClick={() => fileInputRef.current?.click()}
         >
-          <Upload size={64} className="upload-icon" />
-          <p className="upload-text">Trascina i file qui</p>
-          <p className="upload-subtext">oppure</p>
-          <button className="browse-button">Sfoglia dal computer</button>
+          <Upload size={64} style={{ color: '#4285f4', marginBottom: 16 }} />
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Trascina i file qui
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            oppure
+          </Typography>
+          <Button variant="outlined" component="span">
+            Sfoglia dal computer
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -103,59 +146,66 @@ const FileUpload = ({ onClose, onUploadSuccess }) => {
             accept="image/*,video/*"
             style={{ display: 'none' }}
           />
-        </div>
+        </Paper>
 
         {files.length > 0 && (
-          <div className="selected-files">
-            <h3>File selezionati</h3>
-            {files.map((file, index) => (
-              <div key={index} className="file-item">
-                {getFileIcon(file)}
-                <span className="file-name">{file.name}</span>
-                <span className="file-size">
-                  {file.size >= 1024 * 1024 * 1024 
-                    ? (file.size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
-                    : (file.size / (1024 * 1024)).toFixed(2) + ' MB'
-                  }
-                </span>
-                {uploadProgress[index] !== undefined && (
-                  <div className="progress-container">
-                    <div className="progress-bar">
-                      <div 
-                        className="progress-fill" 
-                        style={{ width: `${uploadProgress[index]}%` }}
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              File selezionati
+            </Typography>
+            <List>
+              {files.map((file, index) => (
+                <ListItem key={index} divider>
+                  <ListItemIcon>
+                    {getFileIcon(file)}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={file.name}
+                    secondary={
+                      file.size >= 1024 * 1024 * 1024 
+                        ? (file.size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+                        : (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                    }
+                  />
+                  {uploadProgress[index] !== undefined && (
+                    <Box sx={{ width: '100px', mr: 2 }}>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={uploadProgress[index]} 
+                        sx={{ mb: 0.5 }}
                       />
-                    </div>
-                    <span className="progress-text">{uploadProgress[index]}%</span>
-                  </div>
-                )}
-                {!uploading && (
-                  <button 
-                    className="remove-file" 
-                    onClick={() => removeFile(index)}
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+                      <Typography variant="caption" color="text.secondary">
+                        {uploadProgress[index]}%
+                      </Typography>
+                    </Box>
+                  )}
+                  {!uploading && (
+                    <ListItemSecondaryAction>
+                      <IconButton edge="end" onClick={() => removeFile(index)}>
+                        <X size={16} />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  )}
+                </ListItem>
+              ))}
+            </List>
+          </Box>
         )}
+      </DialogContent>
 
-        <div className="upload-actions">
-          <button className="cancel-button" onClick={onClose} disabled={uploading}>
-            Annulla
-          </button>
-          <button 
-            className="upload-button" 
-            onClick={uploadFiles} 
-            disabled={files.length === 0 || uploading}
-          >
-            {uploading ? 'Caricamento...' : 'Carica'}
-          </button>
-        </div>
-      </div>
-    </div>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} disabled={uploading}>
+          Annulla
+        </Button>
+        <Button 
+          onClick={uploadFiles} 
+          variant="contained" 
+          disabled={files.length === 0 || uploading}
+        >
+          {uploading ? 'Caricamento...' : 'Carica'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
 

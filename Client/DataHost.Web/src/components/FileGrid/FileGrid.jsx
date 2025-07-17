@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from 'react'
+import { 
+  Grid, 
+  Card, 
+  CardMedia, 
+  CardContent, 
+  Typography, 
+  Box, 
+  IconButton, 
+  Pagination, 
+  CircularProgress,
+  Button,
+  useTheme,
+  useMediaQuery
+} from '@mui/material'
 import { Image, MoreVertical, Download, Trash2, Star } from 'lucide-react'
 import api from '../../services/api'
 import ImageDetail from '../ImageDetail/ImageDetail'
 import AuthenticatedVideo from '../AuthenticatedVideo/AuthenticatedVideo'
-import './FileGrid.css'
 
 const FileGrid = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isPhone = useMediaQuery(theme.breakpoints.down('xs')) || useMediaQuery('(max-width:480px)')
   const [files, setFiles] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -168,88 +184,136 @@ const FileGrid = () => {
   }
 
   if (loading) {
-    return <div className="loading">Caricamento file...</div>
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <CircularProgress />
+      </Box>
+    )
   }
 
   return (
-    <div className="file-grid-container">
-      <div className="grid-header">
-        <h2>I miei file</h2>
-        <div className="view-options">
-          <button className="view-button">
-            <svg width="20" height="20" viewBox="0 0 24 24">
+    <Box sx={{ width: '100%' }}>
+      {/* Header */}
+      {!isPhone && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" sx={{ fontWeight: 400, color: '#202124' }}>
+            I miei file
+          </Typography>
+          <IconButton>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
               <path d="M3 3h6v6H3zm0 8h6v6H3zm8-8h6v6h-6zm0 8h6v6h-6z"/>
             </svg>
-          </button>
-        </div>
-      </div>
+          </IconButton>
+        </Box>
+      )}
 
-      <div className="file-grid">
+      {/* File Grid */}
+      <Grid container spacing={isMobile ? 1 : 2}>
         {files.map((file, index) => {
-          // file è sempre un oggetto {url, type, filename}
           const fileUrl = file.url;
           const fileType = file.type;
           
           return (
-            <div
-              key={index}
-              className={`file-card ${selectedFile?.url === fileUrl ? 'selected' : ''}`}
-              onClick={() => handleFileClick(file)}
-              onContextMenu={(e) => handleContextMenu(e, file)}
-            >
-              <div className="file-preview">
-                {fileType === 'video' ? (
-                  <AuthenticatedVideo 
-                    src={imageUrls[fileUrl]}
-                    alt={getFileName(file)}
-                    className="video-thumbnail"
-                    onLoadedMetadata={(e) => {
-                      // Mostra il primo frame del video
-                      e.target.currentTime = 1;
-                    }}
-                  />
-                ) : (
-                  <img 
-                    src={imageUrls[fileUrl] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhcmljYW1lbnRvLi4uPC90ZXh0Pjwvc3ZnPg=='} 
-                    alt={getFileName(file)} 
-                    loading="lazy"
-                  />
-                )}
+            <Grid item xs={isPhone ? 12 : 6} sm={4} md={3} lg={2} key={index}>
+              <Card 
+                sx={{ 
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  border: selectedFile?.url === fileUrl ? '2px solid #4285f4' : '1px solid #e0e0e0',
+                  display: isPhone ? 'block' : 'block',
+                  '&:hover': {
+                    boxShadow: theme.shadows[4],
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+                onClick={() => handleFileClick(file)}
+                onContextMenu={(e) => handleContextMenu(e, file)}
+              >
+                <CardMedia
+                  sx={{ 
+                    height: isPhone ? 200 : (isMobile ? 120 : 140),
+                    width: '100%',
+                    position: 'relative',
+                    backgroundColor: '#f5f5f5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {fileType === 'video' ? (
+                    <AuthenticatedVideo 
+                      src={imageUrls[fileUrl]}
+                      alt={getFileName(file)}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover'
+                      }}
+                      onLoadedMetadata={(e) => {
+                        e.target.currentTime = 1;
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src={imageUrls[fileUrl] || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhcmljYW1lbnRvLi4uPC90ZXh0Pjwvc3ZnPg=='} 
+                      alt={getFileName(file)}
+                      loading="lazy"
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover'
+                      }}
+                    />
+                  )}
+                  
+                  {/* Video overlay */}
+                  {fileType === 'video' && (
+                    <Box sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      left: 8, 
+                      backgroundColor: 'rgba(0,0,0,0.7)', 
+                      borderRadius: 1, 
+                      p: 0.5 
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </Box>
+                  )}
+                </CardMedia>
                 
-                {/* Overlay per indicare il tipo di file */}
-                {fileType === 'video' && (
-                  <div className="file-type-overlay">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
+                {!isPhone && (
+                  <CardContent sx={{ p: 1, pb: '8px !important' }}>
+                    <Typography 
+                      variant="body2" 
+                      noWrap 
+                      sx={{ 
+                        fontSize: 12, 
+                        color: '#202124',
+                        fontWeight: 400
+                      }}
+                    >
+                      {getFileName(file)}
+                    </Typography>
+                  </CardContent>
                 )}
-              </div>
-            </div>
+              </Card>
+            </Grid>
           )
         })}
-      </div>
+      </Grid>
 
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="pagination-button"
-          >
-            Precedente
-          </button>
-          <span className="page-info">
-            Pagina {currentPage} di {totalPages}
-          </span>
-          <button 
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="pagination-button"
-          >
-            Successiva
-          </button>
-        </div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination 
+            count={totalPages} 
+            page={currentPage} 
+            onChange={(e, page) => setCurrentPage(page)}
+            color="primary"
+          />
+        </Box>
       )}
 
       {/* Modal dettaglio immagine/video */}
@@ -263,7 +327,7 @@ const FileGrid = () => {
           onDelete={handleDelete}
         />
       )}
-    </div>
+    </Box>
   )
 }
 
