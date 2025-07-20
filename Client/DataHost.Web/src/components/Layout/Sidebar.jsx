@@ -14,17 +14,18 @@ import {
   useMediaQuery
 } from '@mui/material'
 import { Home, Clock, Star, Trash2, Cloud, Plus, Settings } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const Sidebar = ({ isOpen, onUploadClick, onClose }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const navigate = useNavigate()
+  const location = useLocation()
   
   const sidebarWidth = 256
 
   const menuItems = [
-    { icon: <Home size={20} />, text: 'Il mio Drive', active: true, path: '/' },
+    { icon: <Home size={20} />, text: 'Il mio Drive', path: '/' },
     { icon: <Clock size={20} />, text: 'Recenti', path: '/recent' },
     { icon: <Star size={20} />, text: 'Speciali', path: '/starred' },
     { icon: <Trash2 size={20} />, text: 'Cestino', path: '/trash' },
@@ -58,42 +59,45 @@ const Sidebar = ({ isOpen, onUploadClick, onClose }) => {
 
       {/* Navigation Menu */}
       <List sx={{ px: 1 }}>
-        {menuItems.map((item, index) => (
-          <ListItem
-            key={index}
-            button
-            onClick={() => {
-              if (item.path) {
-                navigate(item.path)
-                if (isMobile) onClose()
-              }
-            }}
-            sx={{
-              borderRadius: '0 20px 20px 0',
-              mr: 2,
-              mb: 0.5,
-              backgroundColor: item.active ? '#e8f0fe' : 'transparent',
-              color: item.active ? '#185abc' : '#202124',
-              '&:hover': {
-                backgroundColor: item.active ? '#e8f0fe' : '#f1f3f4',
-              }
-            }}
-          >
-            <ListItemIcon sx={{ 
-              minWidth: 44, 
-              color: item.active ? '#185abc' : '#5f6368' 
-            }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText 
-              primary={item.text} 
-              primaryTypographyProps={{ 
-                fontSize: 14, 
-                fontWeight: 500 
-              }} 
-            />
-          </ListItem>
-        ))}
+        {menuItems.map((item, index) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <ListItem
+              key={index}
+              button
+              onClick={() => {
+                if (item.path) {
+                  navigate(item.path)
+                  if (isMobile) onClose()
+                }
+              }}
+              sx={{
+                borderRadius: '0 20px 20px 0',
+                mr: 2,
+                mb: 0.5,
+                backgroundColor: isActive ? '#e8f0fe' : 'transparent',
+                color: isActive ? '#185abc' : '#202124',
+                '&:hover': {
+                  backgroundColor: isActive ? '#e8f0fe' : '#f1f3f4',
+                }
+              }}
+            >
+              <ListItemIcon sx={{ 
+                minWidth: 44, 
+                color: isActive ? '#185abc' : '#5f6368' 
+              }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText 
+                primary={item.text} 
+                primaryTypographyProps={{ 
+                  fontSize: 14, 
+                  fontWeight: 500 
+                }} 
+              />
+            </ListItem>
+          );
+        })}
       </List>
 
       {/* Storage Info */}

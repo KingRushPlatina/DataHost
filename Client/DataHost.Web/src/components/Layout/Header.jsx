@@ -5,7 +5,6 @@ import { Search, Settings, HelpCircle, User, LogOut, Grid3X3 } from 'lucide-reac
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-
 const Header = ({ onMenuClick }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const { user, logout } = useAuth();
@@ -25,6 +24,10 @@ const Header = ({ onMenuClick }) => {
     logout();
     navigate('/login');
     handleMenuClose();
+  };
+
+  const handleSettingsClick = () => {
+    navigate('/settings');
   };
 
   return (
@@ -56,17 +59,23 @@ const Header = ({ onMenuClick }) => {
         {/* Right: Icons + User */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
           {!isMobile && (
-            <IconButton color="inherit">
-              <HelpCircle size={20} />
-            </IconButton>
+            <Tooltip title="Aiuto">
+              <IconButton color="inherit">
+                <HelpCircle size={20} />
+              </IconButton>
+            </Tooltip>
           )}
-          <IconButton color="inherit">
-            <Settings size={20} />
-          </IconButton>
-          {!isMobile && (
-            <IconButton color="inherit">
-              <Grid3X3 size={20} />
+          <Tooltip title="Impostazioni">
+            <IconButton color="inherit" onClick={handleSettingsClick}>
+              <Settings size={20} />
             </IconButton>
+          </Tooltip>
+          {!isMobile && (
+            <Tooltip title="App Google">
+              <IconButton color="inherit">
+                <Grid3X3 size={20} />
+              </IconButton>
+            </Tooltip>
           )}
           <Box>
             <Tooltip title={user?.username || 'Utente'}>
@@ -97,7 +106,11 @@ const Header = ({ onMenuClick }) => {
                   <Typography noWrap sx={{ fontSize: 14, color: '#5f6368', mt: 0.5 }}>{user?.email || ''}</Typography>
                 </Box>
               </Box>
-              <MenuItem onClick={handleLogout} sx={{ mt: 1, gap: 1 }}>
+              <MenuItem onClick={() => {handleSettingsClick(); handleMenuClose();}} sx={{ mt: 1, gap: 1 }}>
+                <Settings size={16} style={{ color: '#5f6368' }} />
+                <span>Impostazioni</span>
+              </MenuItem>
+              <MenuItem onClick={handleLogout} sx={{ gap: 1 }}>
                 <LogOut size={16} style={{ color: '#5f6368' }} />
                 <span>Esci</span>
               </MenuItem>

@@ -8,9 +8,11 @@ import {
   Alert,
   Box,
   CircularProgress,
-  Divider
+  Divider,
+  IconButton
 } from '@mui/material';
-import { Settings as SettingsIcon, Folder as FolderIcon } from '@mui/icons-material';
+import { Settings as SettingsIcon, Folder as FolderIcon, ArrowBack } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { getUploadsPath, setUploadsPath } from '../services/settings';
 
 const Settings = () => {
@@ -18,6 +20,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState({ show: false, message: '', severity: 'info' });
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadCurrentSettings();
@@ -79,6 +82,13 @@ const Settings = () => {
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Box display="flex" alignItems="center" mb={3}>
+          <IconButton 
+            onClick={() => navigate('/')} 
+            sx={{ mr: 2 }}
+            aria-label="Torna alla dashboard"
+          >
+            <ArrowBack />
+          </IconButton>
           <SettingsIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
           <Typography variant="h4" component="h1">
             Impostazioni
