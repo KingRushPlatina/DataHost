@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { loadSettings } = require('./settingsController');
 
 // Funzione per rilevare il tipo di file
 const getFileType = (filename) => {
@@ -40,7 +41,9 @@ const getFiles = (req, res) => {
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
 
-    const uploadsDir = path.join(__dirname, '../uploads');
+    const settings = loadSettings();
+    const uploadsDir = settings.uploadsPath;
+    
     fs.readdir(uploadsDir, (err, files) => {
         if (err) {
             return res.status(500).json({ message: 'Errore durante la lettura dei file.' });
@@ -66,7 +69,8 @@ const getFiles = (req, res) => {
 
 const getFile = (req, res) => {
     const filename = req.params.filename;
-    const filePath = path.join(__dirname, '../uploads', filename);
+    const settings = loadSettings();
+    const filePath = path.join(settings.uploadsPath, filename);
     
     // Controlla se il file esiste
     if (!fs.existsSync(filePath)) {
@@ -143,7 +147,8 @@ const getContentType = (filename) => {
 
 const getFileInfo = (req, res) => {
     const filename = req.params.filename;
-    const filePath = path.join(__dirname, '../uploads', filename);
+    const settings = loadSettings();
+    const filePath = path.join(settings.uploadsPath, filename);
     
     // Controlla se il file esiste
     if (!fs.existsSync(filePath)) {

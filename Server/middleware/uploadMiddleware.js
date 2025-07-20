@@ -1,9 +1,11 @@
 const multer = require('multer');
 const path = require('path');
+const { loadSettings } = require('../controllers/settingsController');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        const settings = loadSettings();
+        cb(null, settings.uploadsPath);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname)); 

@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext'
 import Login from './components/Auth/Login'
 import Register from './components/Auth/Register'
 import Dashboard from './pages/Dashboard'
+import Settings from './pages/Settings'
 
 const theme = createTheme({
   palette: {
@@ -58,6 +59,7 @@ function App() {
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
         <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
         <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
       </Routes>
     </ThemeProvider>
   )

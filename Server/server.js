@@ -3,6 +3,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const fileroutes = require('./routes/fileRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 
 require('dotenv').config();
 
@@ -35,6 +36,7 @@ connectDB();
 
 app.use('/api/auth', authRoutes);
 app.use('/api/file', fileroutes);
+app.use('/api/settings', settingsRoutes);
 
 
 app.listen(PORT, () => {

@@ -13,19 +13,22 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material'
-import { Home, Clock, Star, Trash2, Cloud, Plus } from 'lucide-react'
+import { Home, Clock, Star, Trash2, Cloud, Plus, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const Sidebar = ({ isOpen, onUploadClick, onClose }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
+  const navigate = useNavigate()
   
   const sidebarWidth = 256
 
   const menuItems = [
-    { icon: <Home size={20} />, text: 'Il mio Drive', active: true },
-    { icon: <Clock size={20} />, text: 'Recenti' },
-    { icon: <Star size={20} />, text: 'Speciali' },
-    { icon: <Trash2 size={20} />, text: 'Cestino' },
+    { icon: <Home size={20} />, text: 'Il mio Drive', active: true, path: '/' },
+    { icon: <Clock size={20} />, text: 'Recenti', path: '/recent' },
+    { icon: <Star size={20} />, text: 'Speciali', path: '/starred' },
+    { icon: <Trash2 size={20} />, text: 'Cestino', path: '/trash' },
+    { icon: <Settings size={20} />, text: 'Impostazioni', path: '/settings' },
   ]
 
   const drawerContent = (
@@ -59,6 +62,12 @@ const Sidebar = ({ isOpen, onUploadClick, onClose }) => {
           <ListItem
             key={index}
             button
+            onClick={() => {
+              if (item.path) {
+                navigate(item.path)
+                if (isMobile) onClose()
+              }
+            }}
             sx={{
               borderRadius: '0 20px 20px 0',
               mr: 2,
