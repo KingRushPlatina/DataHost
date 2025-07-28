@@ -283,6 +283,37 @@ const FileGrid = () => {
                       </svg>
                     </Box>
                   )}
+
+                  {/* Owner badge per admin */}
+                  {isAdmin() && file.owner && (
+                    <Box sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      backgroundColor: 'rgba(66, 133, 244, 0.9)', 
+                      borderRadius: '12px', 
+                      px: 1,
+                      py: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          fontSize: 10, 
+                          color: 'white',
+                          fontWeight: 500,
+                          lineHeight: 1
+                        }}
+                      >
+                        {file.owner}
+                      </Typography>
+                    </Box>
+                  )}
                 </CardMedia>
                 
                 {!isPhone && (
