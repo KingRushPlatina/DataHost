@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "create-admin": "node scripts/createAdmin.js",
-    "migrate-files": "node scripts/migrateFiles.js"
+    "migrate-files": "node scripts/migrateFiles.js",
+    "migrate-shared": "node scripts/migrateSharedUsers.js"
   },
   "keywords": [],
   "author": "",

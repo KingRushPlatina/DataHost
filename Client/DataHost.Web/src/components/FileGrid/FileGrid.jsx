@@ -13,10 +13,11 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material'
-import { Image, MoreVertical, Download, Trash2, Star } from 'lucide-react'
+import { Image, MoreVertical, Download, Trash2, Star, Share } from 'lucide-react'
 import api from '../../services/api'
 import ImageDetail from '../ImageDetail/ImageDetail'
 import AuthenticatedVideo from '../AuthenticatedVideo/AuthenticatedVideo'
+import ShareDialog from '../ShareDialog/ShareDialog'
 import { useAuth } from '../../contexts/AuthContext'
 
 const FileGrid = () => {
@@ -31,6 +32,8 @@ const FileGrid = () => {
   const [selectedFile, setSelectedFile] = useState(null)
   const [imageUrls, setImageUrls] = useState({}) // Cache per le immagini caricate
   const [showDetail, setShowDetail] = useState(false) // Mostra il dettaglio dell'immagine
+  const [showShareDialog, setShowShareDialog] = useState(false) // Mostra il dialog di condivisione
+  const [fileToShare, setFileToShare] = useState(null) // File da condividere
 
   useEffect(() => {
     fetchFiles()
@@ -185,6 +188,18 @@ const FileGrid = () => {
     // Implementa menu contestuale
   }
 
+  const handleShareFile = (file) => {
+    setFileToShare(file)
+    setShowShareDialog(true)
+  }
+
+  const handleCloseShareDialog = () => {
+    setShowShareDialog(false)
+    setFileToShare(null)
+    // Ricarica i file per aggiornare le condivisioni
+    fetchFiles()
+  }
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
@@ -314,6 +329,63 @@ const FileGrid = () => {
                       </Typography>
                     </Box>
                   )}
+
+                  {/* Badge per file condivisi */}
+                  {file.isShared && (
+                    <Box sx={{ 
+                      position: 'absolute', 
+                      bottom: 8, 
+                      left: 8, 
+                      backgroundColor: 'rgba(76, 175, 80, 0.9)', 
+                      borderRadius: '12px', 
+                      px: 1,
+                      py: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}>
+                      <Share size={10} color="white" />
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          fontSize: 9, 
+                          color: 'white',
+                          fontWeight: 500,
+                          lineHeight: 1
+                        }}
+                      >
+                        Condiviso
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Pulsante condivisione per i propri file */}
+                  {!file.isShared && !isAdmin() && (
+                    <Box sx={{ 
+                      position: 'absolute', 
+                      bottom: 8, 
+                      right: 8, 
+                      backgroundColor: 'rgba(0,0,0,0.7)', 
+                      borderRadius: '50%', 
+                      p: 0.5,
+                      opacity: 0,
+                      transition: 'opacity 0.2s',
+                      '.MuiCard-root:hover &': {
+                        opacity: 1
+                      }
+                    }}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleShareFile(file)
+                        }}
+                        sx={{ p: 0.5 }}
+                      >
+                        <Share size={14} color="white" />
+                      </IconButton>
+                    </Box>
+                  )}
                 </CardMedia>
                 
                 {!isPhone && (
@@ -370,6 +442,15 @@ const FileGrid = () => {
           onClose={handleCloseDetail}
           onDownload={handleDownload}
           onDelete={handleDelete}
+        />
+      )}
+
+      {/* Dialog condivisione file */}
+      {showShareDialog && fileToShare && (
+        <ShareDialog
+          open={showShareDialog}
+          onClose={handleCloseShareDialog}
+          file={fileToShare}
         />
       )}
     </Box>

@@ -3,6 +3,7 @@ const path = require('path');
 const { loadSettings } = require('./settingsController');
 const File = require('../models/File');
 const User = require('../models/User');
+const FileShare = require('../models/FileShare');
 
 // Funzione per rilevare il tipo di file
 const getFileType = (filename) => {
@@ -66,35 +67,72 @@ const getFiles = async (req, res) => {
             return res.status(404).json({ message: 'Utente non trovato.' });
         }
 
-        // Se l'utente è admin, vede tutti i file, altrimenti solo i suoi
-        let query = {};
-        if (currentUser.role !== 'admin') {
-            query.userId = req.userId;
+        let allFiles = [];
+
+        if (currentUser.role === 'admin') {
+            // Admin vede tutti i file
+            const files = await File.find({})
+                .populate('userId', 'username')
+                .sort({ uploadDate: -1 });
+            
+            allFiles = files.map(file => ({
+                ...file.toObject(),
+                owner: file.userId.username,
+                isShared: false,
+                url: `${req.protocol}://${req.get('host')}/api/file/${file.type}/${file.filename}`
+            }));
+        } else {
+            // Utenti normali vedono i loro file + quelli condivisi con loro
+            
+            // File propri
+            const ownFiles = await File.find({ userId: req.userId })
+                .populate('userId', 'username')
+                .sort({ uploadDate: -1 });
+
+            const ownFilesWithMeta = ownFiles.map(file => ({
+                ...file.toObject(),
+                owner: file.userId.username,
+                isShared: false,
+                url: `${req.protocol}://${req.get('host')}/api/file/${file.type}/${file.filename}`
+            }));
+
+            // File condivisi con l'utente
+            const sharedFiles = await FileShare.find({ sharedWithId: req.userId })
+                .populate({
+                    path: 'fileId',
+                    populate: {
+                        path: 'userId',
+                        select: 'username'
+                    }
+                })
+                .sort({ sharedAt: -1 });
+
+            const sharedFilesWithMeta = sharedFiles.map(share => ({
+                ...share.fileId.toObject(),
+                owner: share.fileId.userId.username,
+                isShared: true,
+                sharedAt: share.sharedAt,
+                shareId: share._id,
+                url: `${req.protocol}://${req.get('host')}/api/file/${share.fileId.type}/${share.fileId.filename}`
+            }));
+
+            // Combina i file
+            allFiles = [...ownFilesWithMeta, ...sharedFilesWithMeta];
+            
+            // Ordina per data (i più recenti prima)
+            allFiles.sort((a, b) => {
+                const dateA = a.isShared ? new Date(a.sharedAt) : new Date(a.uploadDate);
+                const dateB = b.isShared ? new Date(b.sharedAt) : new Date(b.uploadDate);
+                return dateB - dateA;
+            });
         }
 
-        const files = await File.find(query)
-            .populate('userId', 'username')
-            .sort({ uploadDate: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const totalFiles = await File.countDocuments(query);
-
-        const fileList = files.map(file => {
-            const endpoint = file.type === 'video' ? 'video' : 'image';
-            return {
-                url: `${req.protocol}://${req.get('host')}/api/file/${endpoint}/${file.filename}`,
-                type: file.type,
-                filename: file.filename,
-                originalName: file.originalName,
-                size: file.size,
-                uploadDate: file.uploadDate,
-                owner: file.userId.username
-            };
-        });
+        // Applica paginazione
+        const totalFiles = allFiles.length;
+        const paginatedFiles = allFiles.slice(skip, skip + limit);
 
         res.status(200).json({
-            files: fileList,
+            files: paginatedFiles,
             currentPage: page,
             totalPages: Math.ceil(totalFiles / limit),
             totalFiles: totalFiles
@@ -115,13 +153,26 @@ const getFile = async (req, res) => {
             return res.status(404).json({ message: 'File non trovato.' });
         }
 
-        // Verifica i permessi: l'utente può vedere solo i suoi file, tranne se è admin
+        // Verifica i permessi usando il campo sharedUserIds
         const currentUser = await User.findById(req.userId);
         if (!currentUser) {
             return res.status(404).json({ message: 'Utente non trovato.' });
         }
 
-        if (currentUser.role !== 'admin' && fileRecord.userId.toString() !== req.userId) {
+        let hasAccess = false;
+
+        if (currentUser.role === 'admin') {
+            // Admin ha accesso a tutto
+            hasAccess = true;
+        } else if (fileRecord.userId.toString() === req.userId) {
+            // Proprietario del file
+            hasAccess = true;
+        } else if (fileRecord.sharedUserIds && fileRecord.sharedUserIds.includes(req.userId)) {
+            // File condiviso con l'utente
+            hasAccess = true;
+        }
+
+        if (!hasAccess) {
             return res.status(403).json({ message: 'Non hai i permessi per accedere a questo file.' });
         }
 
@@ -215,13 +266,26 @@ const getFileInfo = async (req, res) => {
             return res.status(404).json({ message: 'File non trovato.' });
         }
 
-        // Verifica i permessi: l'utente può vedere solo i suoi file, tranne se è admin
+        // Verifica i permessi usando il campo sharedUserIds
         const currentUser = await User.findById(req.userId);
         if (!currentUser) {
             return res.status(404).json({ message: 'Utente non trovato.' });
         }
 
-        if (currentUser.role !== 'admin' && fileRecord.userId._id.toString() !== req.userId) {
+        let hasAccess = false;
+
+        if (currentUser.role === 'admin') {
+            // Admin ha accesso a tutto
+            hasAccess = true;
+        } else if (fileRecord.userId._id.toString() === req.userId) {
+            // Proprietario del file
+            hasAccess = true;
+        } else if (fileRecord.sharedUserIds && fileRecord.sharedUserIds.includes(req.userId)) {
+            // File condiviso con l'utente
+            hasAccess = true;
+        }
+
+        if (!hasAccess) {
             return res.status(403).json({ message: 'Non hai i permessi per accedere a questo file.' });
         }
 

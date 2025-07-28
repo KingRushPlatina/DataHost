@@ -27,6 +27,10 @@ const fileSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    sharedUserIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     uploadDate: {
         type: Date,
         default: Date.now,
