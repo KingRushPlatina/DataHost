@@ -17,9 +17,11 @@ import { Image, MoreVertical, Download, Trash2, Star } from 'lucide-react'
 import api from '../../services/api'
 import ImageDetail from '../ImageDetail/ImageDetail'
 import AuthenticatedVideo from '../AuthenticatedVideo/AuthenticatedVideo'
+import { useAuth } from '../../contexts/AuthContext'
 
 const FileGrid = () => {
   const theme = useTheme()
+  const { isAdmin } = useAuth()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const isPhone = useMediaQuery(theme.breakpoints.down('xs')) || useMediaQuery('(max-width:480px)')
   const [files, setFiles] = useState([])
@@ -197,7 +199,7 @@ const FileGrid = () => {
       {!isPhone && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 400, color: '#202124' }}>
-            I miei file
+            {isAdmin() ? 'Tutti i file' : 'I miei file'}
           </Typography>
           <IconButton>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
@@ -296,6 +298,18 @@ const FileGrid = () => {
                     >
                       {getFileName(file)}
                     </Typography>
+                    {isAdmin() && file.owner && (
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          fontSize: 10, 
+                          color: '#5f6368',
+                          display: 'block'
+                        }}
+                      >
+                        di {file.owner}
+                      </Typography>
+                    )}
                   </CardContent>
                 )}
               </Card>

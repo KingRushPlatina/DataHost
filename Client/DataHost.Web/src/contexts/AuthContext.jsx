@@ -20,12 +20,16 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     const data = await authService.login(username, password)
-    setUser({ username, token: data.token })
+    const userInfo = data.user || { username, role: 'user' }
+    setUser({ ...userInfo, token: data.token })
     return data
   }
 
   const register = async (username, password, email) => {
     const data = await authService.register(username, password, email)
+    if (data.token && data.user) {
+      setUser({ ...data.user, token: data.token })
+    }
     return data
   }
 
@@ -34,8 +38,12 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
   }
 
+  const isAdmin = () => {
+    return user?.role === 'admin'
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

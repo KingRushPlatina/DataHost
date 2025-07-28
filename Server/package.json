@@ -4,7 +4,9 @@
   "main": "ApiEndPoints.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "create-admin": "node scripts/createAdmin.js",
+    "migrate-files": "node scripts/migrateFiles.js"
   },
   "keywords": [],
   "author": "",

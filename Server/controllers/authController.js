@@ -14,11 +14,18 @@ const register = async (req, res) => {
         const user = new User({ username, password, email });
         await user.save();
 
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '1h',
-        });
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
-        res.status(201).json({ token, email: user.email });
+        res.status(201).json({ 
+            token, 
+            email: user.email,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            }
+        });
     } catch (err) {
         res.status(500).json({ message: 'Errore durante la registrazione' });
     }
@@ -38,11 +45,18 @@ const login = async (req, res) => {
             return res.status(400).json({ message: 'Credenziali non valide' });
         }
 
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-            expiresIn: '1h',
-        });
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
 
-        res.status(200).json({ token, email: user.email });
+        res.status(200).json({ 
+            token, 
+            email: user.email,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role
+            }
+        });
     } catch (err) {
         res.status(500).json({ message: 'Errore durante il login' });
     }

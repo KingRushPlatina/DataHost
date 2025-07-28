@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const { loadSettings } = require('./settingsController');
+const File = require('../models/File');
+const User = require('../models/User');
 
 // Funzione per rilevare il tipo di file
 const getFileType = (filename) => {
@@ -17,110 +19,168 @@ const getFileType = (filename) => {
     return 'other';
 };
 
-const uploadFile = (req, res) => {
+const uploadFile = async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'Nessun file caricato.' });
     }
 
-    const fileType = getFileType(req.file.filename);
-    const fileSizeMB = (req.file.size / (1024 * 1024)).toFixed(2);
-    
-    console.log(`File caricato: ${req.file.filename}, Tipo: ${fileType}, Dimensione: ${fileSizeMB}MB`);
-    
-    res.status(201).json({
-        message: 'File caricato con successo.',
-        file: req.file.filename,
-        type: fileType,
-        size: fileSizeMB + 'MB'
-    });
+    try {
+        const fileType = getFileType(req.file.filename);
+        const fileSizeMB = (req.file.size / (1024 * 1024)).toFixed(2);
+        
+        // Salva il file nel database associandolo all'utente
+        const newFile = new File({
+            filename: req.file.filename,
+            originalName: req.file.originalname,
+            path: req.file.path,
+            size: req.file.size,
+            type: fileType,
+            userId: req.userId, // Viene dal middleware di autenticazione
+        });
+
+        await newFile.save();
+        
+        console.log(`File caricato: ${req.file.filename}, Tipo: ${fileType}, Dimensione: ${fileSizeMB}MB, Utente: ${req.userId}`);
+        
+        res.status(201).json({
+            message: 'File caricato con successo.',
+            file: req.file.filename,
+            type: fileType,
+            size: fileSizeMB + 'MB'
+        });
+    } catch (error) {
+        console.error('Errore durante il salvataggio del file:', error);
+        res.status(500).json({ message: 'Errore durante il salvataggio del file.' });
+    }
 };
 
-const getFiles = (req, res) => {
-    const page = parseInt(req.query.page) || 1; 
-    const limit = parseInt(req.query.limit) || 10; 
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+const getFiles = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1; 
+        const limit = parseInt(req.query.limit) || 10; 
+        const skip = (page - 1) * limit;
 
-    const settings = loadSettings();
-    const uploadsDir = settings.uploadsPath;
-    
-    fs.readdir(uploadsDir, (err, files) => {
-        if (err) {
-            return res.status(500).json({ message: 'Errore durante la lettura dei file.' });
+        // Ottieni l'utente corrente per verificare se è admin
+        const currentUser = await User.findById(req.userId);
+        if (!currentUser) {
+            return res.status(404).json({ message: 'Utente non trovato.' });
         }
 
-        const fileList = files.slice(startIndex, endIndex).map(filename => {
-            const fileType = getFileType(filename);
-            const endpoint = fileType === 'video' ? 'video' : 'image';
+        // Se l'utente è admin, vede tutti i file, altrimenti solo i suoi
+        let query = {};
+        if (currentUser.role !== 'admin') {
+            query.userId = req.userId;
+        }
+
+        const files = await File.find(query)
+            .populate('userId', 'username')
+            .sort({ uploadDate: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const totalFiles = await File.countDocuments(query);
+
+        const fileList = files.map(file => {
+            const endpoint = file.type === 'video' ? 'video' : 'image';
             return {
-                url: `${req.protocol}://${req.get('host')}/api/file/${endpoint}/${filename}`,
-                type: fileType,
-                filename: filename
+                url: `${req.protocol}://${req.get('host')}/api/file/${endpoint}/${file.filename}`,
+                type: file.type,
+                filename: file.filename,
+                originalName: file.originalName,
+                size: file.size,
+                uploadDate: file.uploadDate,
+                owner: file.userId.username
             };
         });
 
         res.status(200).json({
             files: fileList,
             currentPage: page,
-            totalPages: Math.ceil(files.length / limit),
+            totalPages: Math.ceil(totalFiles / limit),
+            totalFiles: totalFiles
         });
-    });
+    } catch (error) {
+        console.error('Errore durante il recupero dei file:', error);
+        res.status(500).json({ message: 'Errore durante il recupero dei file.' });
+    }
 };
 
-const getFile = (req, res) => {
+const getFile = async (req, res) => {
     const filename = req.params.filename;
-    const settings = loadSettings();
-    const filePath = path.join(settings.uploadsPath, filename);
     
-    // Controlla se il file esiste
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ message: 'File non trovato.' });
-    }
+    try {
+        // Verifica che il file esista nel database
+        const fileRecord = await File.findOne({ filename });
+        if (!fileRecord) {
+            return res.status(404).json({ message: 'File non trovato.' });
+        }
 
-    const stat = fs.statSync(filePath);
-    const fileSize = stat.size;
-    const range = req.headers.range;
-    const fileType = getFileType(filename);
+        // Verifica i permessi: l'utente può vedere solo i suoi file, tranne se è admin
+        const currentUser = await User.findById(req.userId);
+        if (!currentUser) {
+            return res.status(404).json({ message: 'Utente non trovato.' });
+        }
 
-    // Per i video, supporta sempre il range streaming
-    if (fileType === 'video' && range) {
-        // Parsing del range header per streaming video
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + (1024 * 1024), fileSize - 1); // 1MB chunks
-        const chunksize = (end - start) + 1;
+        if (currentUser.role !== 'admin' && fileRecord.userId.toString() !== req.userId) {
+            return res.status(403).json({ message: 'Non hai i permessi per accedere a questo file.' });
+        }
+
+        const settings = loadSettings();
+        const filePath = path.join(settings.uploadsPath, filename);
         
-        const file = fs.createReadStream(filePath, { start, end });
-        const head = {
-            'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-            'Accept-Ranges': 'bytes',
-            'Content-Length': chunksize,
-            'Content-Type': getContentType(filename),
-            'Cache-Control': 'no-cache',
-        };
-        
-        res.writeHead(206, head);
-        file.pipe(res);
-    } else if (fileType === 'video') {
-        // Per video senza range, invia i primi chunks
-        const chunkSize = 1024 * 1024; // 1MB
-        const head = {
-            'Content-Length': fileSize,
-            'Content-Type': getContentType(filename),
-            'Accept-Ranges': 'bytes',
-            'Cache-Control': 'no-cache',
-        };
-        res.writeHead(200, head);
-        fs.createReadStream(filePath).pipe(res);
-    } else {
-        // Per le immagini, usa il metodo normale
-        const head = {
-            'Content-Length': fileSize,
-            'Content-Type': getContentType(filename),
-            'Cache-Control': 'public, max-age=3600', // Cache per 1 ora
-        };
-        res.writeHead(200, head);
-        fs.createReadStream(filePath).pipe(res);
+        // Controlla se il file esiste fisicamente
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ message: 'File fisico non trovato.' });
+        }
+
+        const stat = fs.statSync(filePath);
+        const fileSize = stat.size;
+        const range = req.headers.range;
+        const fileType = getFileType(filename);
+
+        // Per i video, supporta sempre il range streaming
+        if (fileType === 'video' && range) {
+            // Parsing del range header per streaming video
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + (1024 * 1024), fileSize - 1); // 1MB chunks
+            const chunksize = (end - start) + 1;
+            
+            const file = fs.createReadStream(filePath, { start, end });
+            const head = {
+                'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                'Accept-Ranges': 'bytes',
+                'Content-Length': chunksize,
+                'Content-Type': getContentType(filename),
+                'Cache-Control': 'no-cache',
+            };
+            
+            res.writeHead(206, head);
+            file.pipe(res);
+        } else if (fileType === 'video') {
+            // Per video senza range, invia i primi chunks
+            const chunkSize = 1024 * 1024; // 1MB
+            const head = {
+                'Content-Length': fileSize,
+                'Content-Type': getContentType(filename),
+                'Accept-Ranges': 'bytes',
+                'Cache-Control': 'no-cache',
+            };
+            res.writeHead(200, head);
+            fs.createReadStream(filePath).pipe(res);
+        } else {
+            // Per le immagini, usa il metodo normale
+            const head = {
+                'Content-Length': fileSize,
+                'Content-Type': getContentType(filename),
+                'Cache-Control': 'public, max-age=3600', // Cache per 1 ora
+            };
+            res.writeHead(200, head);
+            fs.createReadStream(filePath).pipe(res);
+        }
+    } catch (error) {
+        console.error('Errore durante il recupero del file:', error);
+        res.status(500).json({ message: 'Errore durante il recupero del file.' });
     }
 };
 
@@ -145,31 +205,54 @@ const getContentType = (filename) => {
     return mimeTypes[ext] || 'application/octet-stream';
 };
 
-const getFileInfo = (req, res) => {
+const getFileInfo = async (req, res) => {
     const filename = req.params.filename;
-    const settings = loadSettings();
-    const filePath = path.join(settings.uploadsPath, filename);
     
-    // Controlla se il file esiste
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ message: 'File non trovato.' });
-    }
+    try {
+        // Verifica che il file esista nel database
+        const fileRecord = await File.findOne({ filename }).populate('userId', 'username');
+        if (!fileRecord) {
+            return res.status(404).json({ message: 'File non trovato.' });
+        }
 
-    const stat = fs.statSync(filePath);
-    const fileType = getFileType(filename);
-    const fileSize = stat.size;
-    
-    res.status(200).json({
-        filename: filename,
-        type: fileType,
-        size: fileSize,
-        sizeFormatted: fileSize >= 1024 * 1024 * 1024 
-            ? (fileSize / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
-            : (fileSize / (1024 * 1024)).toFixed(2) + ' MB',
-        url: `${req.protocol}://${req.get('host')}/api/file/${fileType}/${filename}`,
-        createdAt: stat.birthtime,
-        modifiedAt: stat.mtime
-    });
+        // Verifica i permessi: l'utente può vedere solo i suoi file, tranne se è admin
+        const currentUser = await User.findById(req.userId);
+        if (!currentUser) {
+            return res.status(404).json({ message: 'Utente non trovato.' });
+        }
+
+        if (currentUser.role !== 'admin' && fileRecord.userId._id.toString() !== req.userId) {
+            return res.status(403).json({ message: 'Non hai i permessi per accedere a questo file.' });
+        }
+
+        const settings = loadSettings();
+        const filePath = path.join(settings.uploadsPath, filename);
+        
+        // Controlla se il file esiste fisicamente
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ message: 'File fisico non trovato.' });
+        }
+
+        const stat = fs.statSync(filePath);
+        
+        res.status(200).json({
+            filename: fileRecord.filename,
+            originalName: fileRecord.originalName,
+            type: fileRecord.type,
+            size: fileRecord.size,
+            sizeFormatted: fileRecord.size >= 1024 * 1024 * 1024 
+                ? (fileRecord.size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+                : (fileRecord.size / (1024 * 1024)).toFixed(2) + ' MB',
+            url: `${req.protocol}://${req.get('host')}/api/file/${fileRecord.type}/${filename}`,
+            uploadDate: fileRecord.uploadDate,
+            owner: fileRecord.userId.username,
+            createdAt: stat.birthtime,
+            modifiedAt: stat.mtime
+        });
+    } catch (error) {
+        console.error('Errore durante il recupero delle informazioni del file:', error);
+        res.status(500).json({ message: 'Errore durante il recupero delle informazioni del file.' });
+    }
 };
 
 module.exports = { uploadFile, getFiles, getFile, getFileInfo };
