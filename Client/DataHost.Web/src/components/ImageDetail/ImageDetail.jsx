@@ -74,9 +74,22 @@ const ImageDetail = ({ imageUrl, fileName, fileType = 'image', onClose, onDownlo
     }
   }
 
-  const handleDelete = () => {
-    if (onDelete && window.confirm(`Sei sicuro di voler eliminare ${fileType === 'video' ? 'questo video' : 'questa immagine'}?`)) {
-      onDelete(mediaUrl)
+  const handleDelete = async () => {
+    if (!fileName) return;
+    if (!window.confirm(`Sei sicuro di voler eliminare ${fileType === 'video' ? 'questo video' : 'questa immagine'}?`)) return;
+    setLoading(true);
+    setError('');
+    try {
+      // Chiamata API per eliminare il file
+      await api.delete(`/file/${fileName}`);
+      if (onDelete) {
+        onDelete(mediaUrl);
+      }
+      onClose();
+    } catch (error) {
+      setError('Errore durante l\'eliminazione del file');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -144,7 +157,7 @@ const ImageDetail = ({ imageUrl, fileName, fileType = 'image', onClose, onDownlo
               onClick={handleDelete}
               title="Elimina"
             >
-              <Trash2 size={20} />
+              <Trash2 size={20}/>
             </button>
             <button 
               className="close-button" 
