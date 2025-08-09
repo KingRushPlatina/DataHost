@@ -3,6 +3,53 @@
 	"tasks": [
 		{
 			"type": "shell",
+			"label": "🚀 Start Full Stack (Kill + Debug)",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}/start-dev.ps1"
+			],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new"
+			}
+		},
+		{
+			"type": "shell",
+			"label": "🔧 Start Backend Only (Debug)",
+			"command": "node",
+			"args": [
+				"--inspect=0.0.0.0:9229",
+				"server.js"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/Server"
+			},
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "⚡ Start Frontend Only",
+			"command": "npm",
+			"args": ["run", "dev"],
+			"options": {
+				"cwd": "${workspaceFolder}/Client/DataHost.Web"
+			},
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
 			"label": "Start FE (Vite dev server)",
 			"command": "npm run dev",
 			"group": "build",

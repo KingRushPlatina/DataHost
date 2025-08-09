@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Backend",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "address": "localhost",
+            "localRoot": "${workspaceFolder}/Server",
+            "remoteRoot": "${workspaceFolder}/Server",
+            "restart": true,
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "Launch Backend (Debug)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/Server/server.js",
+            "cwd": "${workspaceFolder}/Server",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "runtimeArgs": ["--inspect=9229"]
+        }
+    ]
+}
