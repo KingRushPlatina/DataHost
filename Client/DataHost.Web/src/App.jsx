@@ -3,7 +3,7 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import { useAuth } from './contexts/AuthContext'
 import Login from './components/Auth/Login'
 import Register from './components/Auth/Register'
-import Dashboard from './pages/Dashboard'
+import Dashboard from './pages/dashboard'
 import Settings from './pages/Settings'
 
 const theme = createTheme({
