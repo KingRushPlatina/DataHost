@@ -2,17 +2,17 @@
 
 ## Demo
 
-### Visualizzazione dei file
-
-DataHost permette di visualizzare i file direttamente dal browser, compresi video e immagini.
-
-![Visualizzazione di un video](images/Screenshot%20from%202026-08-15%2015-37-47.png)
-
 ### Condivisione dei file
 
 È possibile condividere i propri file con altri utenti registrati tramite un'apposita finestra di condivisione.
 
-![Condivisione di un file](images/Screenshot%20from%202026-08-15%2015-39-27.png)
+![Condivisione di un file](images/Screenshot%20from%202026-08-15%2015-37-47.png)
+
+### Visualizzazione dei file
+
+DataHost permette di visualizzare i file direttamente dal browser, compresi video e immagini.
+
+![Visualizzazione di un video](images/Screenshot%20from%202026-08-15%2015-39-27.png)
 
 ## Funzionalità
 
